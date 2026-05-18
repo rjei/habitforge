@@ -2,6 +2,7 @@ package org.example.habitforgebackend.config;
 
 import org.example.habitforgebackend.model.User;
 import org.example.habitforgebackend.repository.UserRepository;
+import org.example.habitforgebackend.service.CharacterService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,7 @@ public class SeedDataConfig {
     }
 
     @Bean
-    CommandLineRunner seedDemoUser(UserRepository userRepository) {
+    CommandLineRunner seedDemoUser(UserRepository userRepository, CharacterService characterService) {
         return args -> {
             if (userRepository.findByUsername("demo").isPresent()) return;
             User user = new User();
@@ -24,7 +25,8 @@ public class SeedDataConfig {
             user.setEmail("demo@local.dev");
             user.setPassword(passwordEncoder.encode("demo123"));
             user.setRole("USER");
-            userRepository.save(user);
+            user = userRepository.save(user);
+            characterService.getOrCreateForUser(user);
         };
     }
 }

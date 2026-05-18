@@ -9,11 +9,11 @@ import java.time.LocalDate;
 @Entity
 @DiscriminatorValue("WEEKLY")
 public class WeeklyHabit extends Habit {
-    @Column(nullable = false)
-    private int targetDaysPerWeek = 3;
+    @Column
+    private Integer targetDaysPerWeek = 3;
 
     public int getTargetDaysPerWeek() {
-        return targetDaysPerWeek;
+        return targetDaysPerWeek != null ? targetDaysPerWeek : 3;
     }
 
     public void setTargetDaysPerWeek(int targetDaysPerWeek) {

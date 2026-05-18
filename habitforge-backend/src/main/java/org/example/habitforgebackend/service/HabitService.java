@@ -20,15 +20,24 @@ public class HabitService {
     private final HabitRepository habitRepository;
     private final HabitLogRepository habitLogRepository;
     private final UserRepository userRepository;
+    private final CharacterService characterService;
+    private final XpService xpService;
+    private final StreakService streakService;
 
     public HabitService(
             HabitRepository habitRepository,
             HabitLogRepository habitLogRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CharacterService characterService,
+            XpService xpService,
+            StreakService streakService
     ) {
         this.habitRepository = habitRepository;
         this.habitLogRepository = habitLogRepository;
         this.userRepository = userRepository;
+        this.characterService = characterService;
+        this.xpService = xpService;
+        this.streakService = streakService;
     }
 
     @Transactional
@@ -113,16 +122,21 @@ public class HabitService {
         }
 
         habit.setCurrentStreak(habit.getCurrentStreak() + 1);
-        int xp = (int) Math.round(habit.calculateXp());
+        habitRepository.save(habit);
+
+        var character = characterService.getOrCreateForUser(user);
+        int baseXp = (int) Math.round(habit.calculateXp());
+        int xpEarned = xpService.addXp(character, baseXp, habit);
+        streakService.onStreakUpdated(habit, character);
 
         HabitLog log = new HabitLog();
         log.setHabit(habit);
         log.setUser(user);
-        log.setXpEarned(xp);
+        log.setXpEarned(xpEarned);
         log.setCompletedAt(LocalDateTime.now());
         habitLogRepository.save(log);
 
-        return toResponse(habitRepository.save(habit));
+        return toResponse(habit);
     }
 
     @Transactional(readOnly = true)

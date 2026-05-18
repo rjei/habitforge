@@ -18,17 +18,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CharacterService characterService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            AuthenticationManager authenticationManager
+            AuthenticationManager authenticationManager,
+            CharacterService characterService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.characterService = characterService;
     }
 
     @Transactional
@@ -45,7 +48,8 @@ public class AuthService {
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole("USER");
-        userRepository.save(user);
+        user = userRepository.save(user);
+        characterService.getOrCreateForUser(user);
 
         String token = jwtService.generateToken(user.getUsername(), user.getRole());
         return new AuthResponse(token, "Bearer", user.getUsername(), user.getRole());
