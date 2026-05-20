@@ -5,10 +5,10 @@ import {
   BookOpen, 
   Trophy, 
   Sparkles, 
-  Settings, 
   LogOut, 
   Plus,
-  ShieldAlert
+  ShieldAlert,
+  Users
 } from 'lucide-react';
 
 const Sidebar = ({ onOpenForgeModal }) => {
@@ -29,6 +29,13 @@ const Sidebar = ({ onOpenForgeModal }) => {
           ⚔️
         </span>
       )
+    },
+    {
+      id: 'community',
+      path: '/community',
+      label: 'COMMUNITY HUB',
+      sublabel: 'Tavern & Guilds',
+      icon: (active) => <Users size={18} className={active ? 'text-accent-blue' : 'text-slate-400'} />
     },
     {
       id: 'grimoire',
@@ -64,19 +71,40 @@ const Sidebar = ({ onOpenForgeModal }) => {
         </div>
 
         {/* CHARACTER SNAPSHOT CARD */}
-        <div className="bg-[#131822] border border-[#1F2937] p-3 rounded-lg flex flex-col gap-2 shadow-inner">
-          <div className="text-xs uppercase text-slate-500 font-semibold tracking-wider">
-            Active Hero
+        <div 
+          onClick={() => {
+            if (isInitialized) {
+              navigate('/profile');
+            }
+          }}
+          className={`bg-[#131822] border p-3 rounded-lg flex flex-col gap-2 shadow-inner transition-all duration-300 ${
+            isInitialized 
+              ? 'cursor-pointer border-[#1F2937] hover:border-accent-blue/50 hover:bg-[#131822]/80 group' 
+              : 'border-[#1F2937]'
+          }`}
+        >
+          <div className="text-xs uppercase text-slate-500 font-semibold tracking-wider flex justify-between items-center">
+            <span>Active Hero</span>
+            {isInitialized && (
+              <span className="text-[9px] text-accent-blue font-bold font-mono tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                VIEW PROFILE ➔
+              </span>
+            )}
           </div>
           {isInitialized ? (
             <div className="flex items-center gap-3">
               {/* Avatar Frame */}
               <div className="relative">
                 <div className="w-12 h-12 rounded bg-[#0B0E14] border-2 border-accent-blue/60 overflow-hidden flex items-center justify-center shadow-blue-glow">
-                  <span className="text-2xl">🛡️</span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent-gold text-[#0B0E14] text-[9px] font-bold rounded-full flex items-center justify-center border border-[#131822]">
-                  {hero.level}
+                  {hero.avatar ? (
+                    <img 
+                      src={hero.avatar} 
+                      alt="Hero Avatar" 
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <span className="text-2xl">🛡️</span>
+                  )}
                 </div>
               </div>
               {/* Class & Details */}
@@ -187,31 +215,34 @@ const Sidebar = ({ onOpenForgeModal }) => {
       <div className="flex flex-col gap-4">
         {/* NEW QUEST ACTION BUTTON */}
         <button 
-          onClick={onOpenForgeModal}
+          onClick={() => {
+            if (!isInitialized) {
+              navigate('/register');
+            } else {
+              onOpenForgeModal();
+            }
+          }}
           className="w-full bg-accent-blue hover:bg-accent-blue/90 text-dark-slate font-bold text-xs uppercase py-3 rounded-lg shadow-blue-glow hover:shadow-blue-glow-hover transition-all flex items-center justify-center gap-2 tracking-wider"
         >
           <Plus size={14} className="stroke-[3]" />
           Forge New Quest
         </button>
 
-        {/* SETTINGS AND LOG OUT */}
-        <div className="flex flex-col gap-1 border-t border-[#131822] pt-4 font-mono text-[11px]">
-          <button className="flex items-center gap-2.5 py-2 px-2 text-slate-400 hover:text-slate-200 transition-all rounded hover:bg-[#131822]/40 w-full text-left">
-            <Settings size={14} />
-            <span>SETTINGS</span>
-          </button>
-          
-          <button 
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-            className="flex items-center gap-2.5 py-2 px-2 text-accent-red hover:text-accent-red/80 transition-all rounded hover:bg-[#131822]/40 w-full text-left"
-          >
-            <LogOut size={14} />
-            <span>LOG OUT</span>
-          </button>
-        </div>
+        {/* LOG OUT */}
+        {isInitialized && (
+          <div className="flex flex-col gap-1 border-t border-[#131822] pt-4 font-mono text-[11px]">
+            <button 
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="flex items-center gap-2.5 py-2 px-2 text-accent-red hover:text-accent-red/80 transition-all rounded hover:bg-[#131822]/40 w-full text-left"
+            >
+              <LogOut size={14} />
+              <span>LOG OUT</span>
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

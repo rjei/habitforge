@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useHabitForge } from '../context/HabitForgeContext';
 import { 
   Check, 
@@ -20,26 +20,15 @@ import {
 } from 'lucide-react';
 
 const ShrineView = () => {
-  const { hero, habits, completeQuest, isInitialized, initializeHero } = useHabitForge();
+  const { hero, habits, completeQuest, isInitialized } = useHabitForge();
   const outletContext = useOutletContext();
-  
-  // Naming & Class creation local state
-  const [isCreating, setIsCreating] = useState(false);
-  const [heroName, setHeroName] = useState('Seraphim Dawn');
-  const [heroClass, setHeroClass] = useState('Paladin');
+  const navigate = useNavigate();
 
   // Trigger modal function passed down from MainLayout
   const handleForgeFirstHabit = () => {
     if (outletContext && outletContext.onOpenForgeModal) {
       outletContext.onOpenForgeModal();
     }
-  };
-
-  // Naming form submission
-  const handleCreateHeroSubmit = (e) => {
-    e.preventDefault();
-    initializeHero(heroName, heroClass);
-    setIsCreating(false);
   };
 
   // Remaining incomplete daily quests count
@@ -90,106 +79,43 @@ const ShrineView = () => {
             {/* Cavern background gradient */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,171,255,0.03)_0%,transparent_70%)] pointer-events-none" />
 
-            {!isCreating ? (
-              <>
-                {/* Silhouette & Avatar overlay */}
-                <div className="relative shrink-0">
-                  <div className="w-40 h-40 rounded-lg bg-[#0B0E14] border border-gray-800 overflow-hidden flex items-center justify-center relative group">
-                    {/* Abstract silhouette character background */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 z-10" />
-                    <img 
-                      src="https://images.unsplash.com/photo-1519074069444-1ba4e66640c2?auto=format&fit=crop&w=200&h=200&q=80" 
-                      alt="Hero Silhouette" 
-                      className="w-full h-full object-cover object-center opacity-30 grayscale filter group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute z-20 flex flex-col items-center justify-center text-slate-500 gap-1.5">
-                      <UserPlus size={36} className="text-slate-600 stroke-[1.5]" />
-                    </div>
-                  </div>
+            {/* Silhouette & Avatar overlay */}
+            <div className="relative shrink-0">
+              <div className="w-40 h-40 rounded-lg bg-[#0B0E14] border border-gray-800 overflow-hidden flex items-center justify-center relative group">
+                {/* Abstract silhouette character background */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 z-10" />
+                <img 
+                  src="https://images.unsplash.com/photo-1519074069444-1ba4e66640c2?auto=format&fit=crop&w=200&h=200&q=80" 
+                  alt="Hero Silhouette" 
+                  className="w-full h-full object-cover object-center opacity-30 grayscale filter group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute z-20 flex flex-col items-center justify-center text-slate-500 gap-1.5">
+                  <UserPlus size={36} className="text-slate-600 stroke-[1.5]" />
                 </div>
+              </div>
+            </div>
 
-                {/* Details */}
-                <div className="flex flex-col gap-4 flex-1">
-                  <div className="flex flex-col gap-1.5">
-                    <h2 className="text-2xl font-black text-slate-100 tracking-wide uppercase">
-                      Forge Your Legend
-                    </h2>
-                    <p className="text-xs text-slate-400 font-medium leading-relaxed font-sans max-w-md">
-                      The path to greatness begins with a single habit. Name your hero and choose your class to begin your odyssey.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <button
-                      onClick={() => setIsCreating(true)}
-                      className="px-6 py-3.5 bg-accent-blue hover:bg-accent-blue/90 text-dark-slate font-black text-xs uppercase rounded-lg shadow-blue-glow hover:shadow-blue-glow-hover transition-all flex items-center gap-2.5 tracking-widest font-mono"
-                    >
-                      <Sparkles size={14} className="fill-dark-slate" />
-                      CREATE HERO
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleCreateHeroSubmit} className="w-full flex flex-col gap-4 z-10 font-mono text-xs">
-                <div className="border-b border-gray-800 pb-2 mb-2 flex items-center gap-2">
-                  <Sparkles size={16} className="text-accent-blue" />
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-slate-100">Hero Character Builder</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Hero Name */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-slate-400 font-bold uppercase tracking-wider">HERO NAME</label>
-                    <input 
-                      type="text" 
-                      value={heroName}
-                      onChange={(e) => setHeroName(e.target.value)}
-                      placeholder="e.g. Paladin_Arin"
-                      className="bg-[#0B0E14] border border-gray-800 focus:border-accent-blue p-3 rounded-lg text-slate-100 transition-all font-sans text-sm focus:outline-none"
-                      required
-                    />
-                  </div>
-
-                  {/* Hero Class Selection */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-slate-400 font-bold uppercase tracking-wider">CLASS PATHWAY</label>
-                    <div className="grid grid-cols-2 gap-2 font-sans">
-                      {['Paladin', 'Sorceress', 'Rogue', 'Berserker'].map((cls) => (
-                        <button
-                          key={cls}
-                          type="button"
-                          onClick={() => setHeroClass(cls)}
-                          className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${
-                            heroClass === cls 
-                              ? 'bg-accent-blue/15 border-accent-blue text-accent-blue font-extrabold shadow-blue-glow' 
-                              : 'bg-[#0B0E14] border-gray-800 text-slate-400 hover:border-gray-700'
-                          }`}
-                        >
-                          {cls}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreating(false)}
-                    className="px-4 py-2 border border-gray-800 hover:bg-gray-800 rounded-lg text-slate-400 transition-all text-xs font-bold uppercase"
-                  >
-                    ABANDON
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-accent-blue hover:bg-accent-blue/90 text-dark-slate font-extrabold rounded-lg shadow-blue-glow transition-all text-xs uppercase flex items-center gap-1.5"
-                  >
-                    Forge Hero <ArrowRight size={14} />
-                  </button>
-                </div>
-              </form>
-            )}
+            {/* Details */}
+            <div className="flex flex-col gap-4 flex-1">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-2xl font-black text-slate-100 tracking-wide uppercase">
+                  Forge Your Legend
+                </h2>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed font-sans max-w-md">
+                  The path to greatness begins with a single habit. Name your hero and choose your class to begin your odyssey.
+                </p>
+              </div>
+              
+              <div>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="px-6 py-3.5 bg-accent-blue hover:bg-accent-blue/90 text-dark-slate font-black text-xs uppercase rounded-lg shadow-blue-glow hover:shadow-blue-glow-hover transition-all flex items-center gap-2.5 tracking-widest font-mono"
+                >
+                  <Sparkles size={14} className="fill-dark-slate" />
+                  CREATE HERO
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* B. ACTIVE QUEST BOARD - EMPTY STATE */}
@@ -217,7 +143,7 @@ const ShrineView = () => {
 
               <div>
                 <button
-                  onClick={handleForgeFirstHabit}
+                  onClick={() => navigate('/register')}
                   className="px-5 py-2.5 bg-transparent border border-accent-blue/30 hover:border-accent-blue hover:bg-accent-blue/5 text-[#8BABFF] font-bold text-xs uppercase rounded transition-all tracking-widest font-mono flex items-center gap-1.5"
                 >
                   <Plus size={14} className="stroke-[2.5]" />
@@ -231,25 +157,58 @@ const ShrineView = () => {
         {/* RIGHT COLUMN: LOCKED CHARACTER METRICS */}
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6 select-none z-10">
           
-          {/* LEVEL CAP BLOCK */}
-          <div className="rpg-card border border-gray-800 p-5 flex flex-col gap-4 bg-card-slate relative overflow-hidden">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] font-mono font-bold tracking-[0.25em] text-slate-500 uppercase">
-                Character Level
-              </span>
-              <span className="text-base font-mono font-black text-accent-gold tracking-wide">
-                LVL 1
-              </span>
-            </div>
-            
-            {/* Empty Progress bar */}
-            <div className="w-full bg-[#0B0E14] h-2.5 rounded-full overflow-hidden border border-gray-900">
-              <div className="bg-slate-800 h-full w-[2%] rounded-full shadow-inner" />
+          {/* CHARACTER STATS CARD (LEVEL 1 DEFAULT) */}
+          <div className="rpg-card border border-gray-800 p-5 relative overflow-hidden bg-card-slate">
+            <div className="absolute top-3 right-4 opacity-5 pointer-events-none">
+              <Shield size={100} className="text-slate-100" />
             </div>
 
-            <div className="flex justify-between items-center text-[10px] font-mono text-slate-500">
-              <span>XP: 0</span>
-              <span>NEXT: 100</span>
+            <h3 className="text-sm font-extrabold tracking-widest text-slate-100 uppercase flex items-center gap-2 mb-5 font-sans border-b border-gray-800 pb-2">
+              📊 Character Stats
+            </h3>
+
+            <div className="flex flex-col gap-4 font-mono text-xs">
+              {/* FOCUS */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-400 font-bold tracking-wide">FOCUS</span>
+                  <span className="text-accent-blue font-bold">Level 1</span>
+                </div>
+                <div className="w-full bg-[#0B0E14] h-1.5 rounded-full overflow-hidden border border-gray-800">
+                  <div 
+                    className="bg-accent-blue h-full rounded-full shadow-blue-glow" 
+                    style={{ width: '1%' }}
+                  />
+                </div>
+              </div>
+
+              {/* VITALITY */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-400 font-bold tracking-wide">VITALITY</span>
+                  <span className="text-accent-gold font-bold">Level 1</span>
+                </div>
+                <div className="w-full bg-[#0B0E14] h-1.5 rounded-full overflow-hidden border border-gray-800">
+                  <div 
+                    className="bg-accent-gold h-full rounded-full shadow-gold-glow" 
+                    style={{ width: '1%' }}
+                  />
+                </div>
+              </div>
+
+              {/* WISDOM */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-400 font-bold tracking-wide">WISDOM</span>
+                  <span className="text-accent-orange font-bold">Level 1</span>
+                </div>
+                <div className="w-full bg-[#0B0E14] h-1.5 rounded-full overflow-hidden border border-gray-800">
+                  <div 
+                    className="bg-accent-orange h-full rounded-full shadow-red-glow" 
+                    style={{ width: '1%' }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

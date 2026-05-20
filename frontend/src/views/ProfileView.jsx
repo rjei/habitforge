@@ -17,7 +17,18 @@ import {
 } from 'lucide-react';
 
 const ProfileView = () => {
-  const { hero } = useHabitForge();
+  const { hero, updateAvatar } = useHabitForge();
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Percentage calculations
   const xpPercent = Math.round((hero.xp / hero.xpNext) * 100);
@@ -59,20 +70,42 @@ const ProfileView = () => {
         {/* Hero Details left block */}
         <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto z-10">
           
-          {/* Avatar Slot */}
-          <div className="relative">
-            <div className="w-28 h-28 rounded-lg bg-[#0B0E14] border-2 border-accent-blue/50 overflow-hidden flex items-center justify-center shadow-blue-glow">
-              {/* Premium RPG avatar picture of a Knight */}
-              <img 
-                src="https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80" 
-                alt="Paladin Portrait" 
-                className="w-full h-full object-cover object-center opacity-85"
+          {/* Avatar Slot with Upload Option */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative group">
+              <div className="w-28 h-28 rounded-lg bg-[#0B0E14] border-2 border-accent-blue/50 overflow-hidden flex items-center justify-center shadow-blue-glow relative">
+                <img 
+                  src={hero.avatar} 
+                  alt="Paladin Portrait" 
+                  className="w-full h-full object-cover object-center opacity-85"
+                />
+                {/* Hover overlay upload option */}
+                <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-accent-blue text-[10px] font-mono font-bold tracking-wider gap-1">
+                  <span>UPLOAD</span>
+                  <span>IMAGE</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleAvatarChange}
+                  />
+                </label>
+              </div>
+              {/* Level bubble tag overlay */}
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent-blue text-dark-slate font-mono font-black text-xs rounded-lg flex items-center justify-center border-2 border-card-slate shadow-blue-glow">
+                {hero.level}
+              </div>
+            </div>
+            {/* Explicit upload button */}
+            <label className="cursor-pointer px-3 py-1 bg-[#0B0E14]/60 border border-slate-800 hover:border-accent-blue/50 text-[10px] font-mono font-bold text-accent-blue hover:text-accent-blue/80 rounded transition-all uppercase tracking-wider">
+              Change Portrait
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleAvatarChange}
               />
-            </div>
-            {/* Level bubble tag overlay */}
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent-blue text-dark-slate font-mono font-black text-xs rounded-lg flex items-center justify-center border-2 border-card-slate shadow-blue-glow">
-              {hero.level}
-            </div>
+            </label>
           </div>
 
           {/* Rank & Stats */}

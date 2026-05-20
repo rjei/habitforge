@@ -20,7 +20,8 @@ const SageView = () => {
     selectThread, 
     messages, 
     quickReplies, 
-    sendMessage 
+    sendMessage,
+    isInitialized
   } = useHabitForge();
 
   const [input, setInput] = useState('');
@@ -49,7 +50,23 @@ const SageView = () => {
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 font-sans max-w-6xl mx-auto h-[calc(100vh-140px)] select-none">
+    <div className="flex flex-col gap-6 font-sans max-w-6xl mx-auto h-[calc(100vh-120px)] select-none">
+      
+      {/* HEADER SECTION */}
+      <div className="flex justify-between items-start border-b border-gray-900 pb-4">
+        <div className="flex flex-col">
+          <h2 className="text-xl font-black uppercase tracking-widest text-slate-100 flex items-center gap-2.5">
+            <Sparkles size={20} className="text-accent-blue animate-pulse" />
+            Sage's Sanctum
+          </h2>
+          <p className="text-xs text-slate-500 font-mono tracking-wide mt-1 uppercase">
+            Consult the AI Coach for guidance, streak preservation, and restorative rituals
+          </p>
+        </div>
+      </div>
+
+      {/* PANELS CONTAINER */}
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
       
       {/* 1. LEFT PANEL: RECENT CHRONICLES THREADS */}
       <div className="w-full lg:w-56 shrink-0 flex flex-col gap-4 bg-[#131822]/40 border border-gray-800/40 p-4 rounded-lg overflow-y-auto">
@@ -104,7 +121,7 @@ const SageView = () => {
                 <div className={`w-9 h-9 rounded bg-dark-slate border shrink-0 flex items-center justify-center text-lg ${
                   isSage ? 'border-accent-blue/40 shadow-blue-glow' : 'border-gray-800'
                 }`}>
-                  {isSage ? '🧙‍♂️' : '🛡️'}
+                  {isSage ? '🧙‍♂️' : (isInitialized ? '🛡️' : '?')}
                 </div>
 
                 {/* Text Bubble */}
@@ -301,6 +318,8 @@ const SageView = () => {
           </div>
         </div>
       </div>
+      
+      </div> {/* End of PANELS CONTAINER */}
     </div>
   );
 };

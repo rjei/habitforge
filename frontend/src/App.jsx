@@ -9,6 +9,7 @@ import SageView from './views/SageView';
 import LoginView from './views/LoginView';
 import RegisterView from './views/RegisterView';
 import ProfileView from './views/ProfileView';
+import CommunityView from './views/CommunityView';
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             {/* View 1: SHRINE (Quest Hub / Dashboard) */}
             <Route index element={<ShrineView />} />
+
+            {/* View 1.5: COMMUNITY HUB */}
+            <Route path="community" element={<CommunityView />} />
             
             {/* View 2: THE GRIMOIRE (Habit Management) */}
             <Route path="grimoire" element={<GrimoireView />} />

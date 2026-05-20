@@ -21,54 +21,127 @@ export const HabitForgeProvider = ({ children }) => {
   const [hero, setHero] = useState({
     name: 'Seraphim Dawn',
     class: 'Paladin',
-    level: 24,
-    xp: 14200,
-    xpNext: 15000,
+    level: 1,
+    xp: 0,
+    xpNext: 100,
     streak: 7,
     stats: {
-      focus: 88,
-      vitality: 74,
-      wisdom: 92
+      focus: 10,
+      vitality: 10,
+      wisdom: 10
     },
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
-    title: 'Level 24 Paladin'
+    avatar: localStorage.getItem('avatar') || 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80',
+    title: 'Level 1 Paladin'
   });
 
-  // Auth functions
-  const login = (usernameOrEmail, phrase) => {
-    setIsAuthenticated(true);
-    setIsInitialized(true); // Logging in loads their existing hero!
+  const fetchCharacterData = async (token) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/character', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setHero(prev => ({
+          ...prev,
+          name: localStorage.getItem('username') || prev.name,
+          level: data.level,
+          xp: data.totalXp,
+          xpNext: data.xpToNextLevel,
+          stats: {
+            focus: data.disciplineScore || 10,
+            vitality: data.healthScore || 10,
+            wisdom: prev.stats.wisdom || 10
+          },
+          title: `Level ${data.level} ${prev.class}`
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching character:', err);
+    }
   };
 
-  const register = (heroName, email, phrase) => {
-    setHero(prev => ({
-      ...prev,
-      name: heroName || 'Seraphim Dawn',
-      level: 1,
-      xp: 0,
-      xpNext: 100,
-      stats: { focus: 10, vitality: 10, wisdom: 10 }
-    }));
-    setIsInitialized(false); // On registration, they start fresh and uninitialized
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+    if (token && username) {
+      setIsAuthenticated(true);
+      setIsInitialized(true);
+      fetchCharacterData(token);
+      const storedAvatar = localStorage.getItem('avatar');
+      if (storedAvatar) {
+        setHero(prev => ({ ...prev, avatar: storedAvatar }));
+      }
+    } else {
+      // Guest mode: allowed to view Shrine (Quest Hub No account)
+      setIsAuthenticated(true);
+      setIsInitialized(false);
+    }
+  }, []);
+
+  // Auth functions
+  const login = async (username, password) => {
+    const response = await fetch('http://localhost:8080/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || 'Invalid username or secret phrase');
+    }
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
     setIsAuthenticated(true);
+    setIsInitialized(true);
+    await fetchCharacterData(data.token);
+  };
+
+  const register = async (heroName, email, phrase) => {
+    const response = await fetch('http://localhost:8080/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username: heroName, email, password: phrase })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || 'Registration failed. Name or email might already be claimed.');
+    }
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
+    setIsAuthenticated(true);
+    setIsInitialized(true);
+    await fetchCharacterData(data.token);
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('avatar');
     setIsAuthenticated(false);
-  };
-
-  const initializeHero = (name, heroClass) => {
+    setIsInitialized(false);
     setHero(prev => ({
       ...prev,
-      name: name || 'Seraphim Dawn',
-      class: heroClass || 'Paladin',
-      level: 1,
-      xp: 0,
-      xpNext: 100,
-      stats: { focus: 20, vitality: 20, wisdom: 20 }
+      avatar: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80'
     }));
-    setIsInitialized(true);
   };
+
+  const updateAvatar = (avatarUrl) => {
+    setHero(prev => ({
+      ...prev,
+      avatar: avatarUrl
+    }));
+    localStorage.setItem('avatar', avatarUrl);
+  };
+
 
   const resetHero = () => {
     setIsInitialized(false);
@@ -423,8 +496,8 @@ export const HabitForgeProvider = ({ children }) => {
         login,
         register,
         logout,
-        initializeHero,
-        resetHero
+        resetHero,
+        updateAvatar
       }}
     >
       {children}

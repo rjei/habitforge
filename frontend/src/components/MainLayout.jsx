@@ -68,14 +68,6 @@ const MainLayout = () => {
               <Bell size={15} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-accent-blue rounded-full shadow-blue-glow"></span>
             </button>
-
-            {/* Profile Quick-Action */}
-            <div 
-              onClick={() => navigate('/profile')}
-              className="w-8 h-8 rounded bg-[#131822] border border-accent-blue/30 overflow-hidden cursor-pointer hover:border-accent-blue transition-all flex items-center justify-center"
-            >
-              <span className="text-base">🧙‍♂️</span>
-            </div>
           </div>
         </header>
 
