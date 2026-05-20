@@ -11,24 +11,77 @@ export const useHabitForge = () => {
 };
 
 export const HabitForgeProvider = ({ children }) => {
+  // AUTHENTICATION STATE
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+
+  // HERO INITIALIZATION STATE (Onboarding vs Dashboard)
+  const [isInitialized, setIsInitialized] = useState(true);
+
   // 1. HERO STATE
   const [hero, setHero] = useState({
-    name: 'You (PaladinX)',
+    name: 'Seraphim Dawn',
     class: 'Paladin',
     level: 24,
     xp: 14200,
     xpNext: 15000,
     streak: 7,
     stats: {
-      focus: 18,
-      vitality: 24,
-      wisdom: 12
+      focus: 88,
+      vitality: 74,
+      wisdom: 92
     },
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
     title: 'Level 24 Paladin'
   });
 
+  // Auth functions
+  const login = (usernameOrEmail, phrase) => {
+    setIsAuthenticated(true);
+  };
+
+  const register = (heroName, email, phrase) => {
+    setHero(prev => ({
+      ...prev,
+      name: heroName || 'Seraphim Dawn',
+      level: 1,
+      xp: 0,
+      xpNext: 100,
+      stats: { focus: 10, vitality: 10, wisdom: 10 }
+    }));
+    setIsInitialized(false); // On registration, they start fresh and uninitialized
+    setIsAuthenticated(true);
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+  };
+
+  const initializeHero = (name, heroClass) => {
+    setHero(prev => ({
+      ...prev,
+      name: name || 'Seraphim Dawn',
+      class: heroClass || 'Paladin',
+      level: 1,
+      xp: 0,
+      xpNext: 100,
+      stats: { focus: 20, vitality: 20, wisdom: 20 }
+    }));
+    setIsInitialized(true);
+  };
+
+  const resetHero = () => {
+    setIsInitialized(false);
+    setHero(prev => ({
+      ...prev,
+      level: 1,
+      xp: 0,
+      xpNext: 100,
+      stats: { focus: 0, vitality: 0, wisdom: 0 }
+    }));
+  };
+
   // Level Up check helper
+
   const addXp = (amount, statToIncrease, statAmount) => {
     setHero(prev => {
       let newXp = prev.xp + amount;
@@ -363,7 +416,14 @@ export const HabitForgeProvider = ({ children }) => {
         messages,
         quickReplies,
         sendMessage,
-        addXp
+        addXp,
+        isAuthenticated,
+        isInitialized,
+        login,
+        register,
+        logout,
+        initializeHero,
+        resetHero
       }}
     >
       {children}

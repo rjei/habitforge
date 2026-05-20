@@ -12,11 +12,11 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({ onOpenForgeModal }) => {
-  const { hero } = useHabitForge();
+  const { hero, isInitialized, logout } = useHabitForge();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const xpPercent = Math.min(100, Math.max(0, (hero.xp / hero.xpNext) * 100));
+  const xpPercent = isInitialized ? Math.min(100, Math.max(0, (hero.xp / hero.xpNext) * 100)) : 0;
 
   const navItems = [
     {
@@ -68,32 +68,50 @@ const Sidebar = ({ onOpenForgeModal }) => {
           <div className="text-xs uppercase text-slate-500 font-semibold tracking-wider">
             Active Hero
           </div>
-          <div className="flex items-center gap-3">
-            {/* Avatar Frame */}
-            <div className="relative">
-              <div className="w-12 h-12 rounded bg-[#0B0E14] border-2 border-accent-blue/60 overflow-hidden flex items-center justify-center shadow-blue-glow">
-                <span className="text-2xl">🛡️</span>
+          {isInitialized ? (
+            <div className="flex items-center gap-3">
+              {/* Avatar Frame */}
+              <div className="relative">
+                <div className="w-12 h-12 rounded bg-[#0B0E14] border-2 border-accent-blue/60 overflow-hidden flex items-center justify-center shadow-blue-glow">
+                  <span className="text-2xl">🛡️</span>
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent-gold text-[#0B0E14] text-[9px] font-bold rounded-full flex items-center justify-center border border-[#131822]">
+                  {hero.level}
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent-gold text-[#0B0E14] text-[9px] font-bold rounded-full flex items-center justify-center border border-[#131822]">
-                {hero.level}
+              {/* Class & Details */}
+              <div className="flex flex-col">
+                <h2 className="text-sm font-bold text-slate-100 tracking-wide font-mono">
+                  {hero.name.replace('You ', '')}
+                </h2>
+                <p className="text-[11px] text-accent-blue font-semibold tracking-wider uppercase font-mono">
+                  LVL {hero.level} {hero.class}
+                </p>
               </div>
             </div>
-            {/* Class & Details */}
-            <div className="flex flex-col">
-              <h2 className="text-sm font-bold text-slate-100 tracking-wide font-mono">
-                {hero.name.replace('You ', '')}
-              </h2>
-              <p className="text-[11px] text-accent-blue font-semibold tracking-wider uppercase font-mono">
-                LVL {hero.level} {hero.class}
-              </p>
+          ) : (
+            <div className="flex items-center gap-3">
+              {/* Uninitialized Avatar Frame */}
+              <div className="w-12 h-12 rounded bg-[#0B0E14] border border-gray-800 flex items-center justify-center shadow-inner">
+                <span className="text-lg font-bold text-slate-500 font-mono">?</span>
+              </div>
+              {/* Uninitialized Label */}
+              <div className="flex flex-col">
+                <h2 className="text-[10px] font-bold text-accent-red tracking-wider uppercase font-mono">
+                  UNINITIALIZED
+                </h2>
+                <p className="text-xs text-slate-400 font-bold tracking-wide">
+                  New Hero
+                </p>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* XP Bar */}
           <div className="mt-1">
             <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-1">
               <span>XP PROGRESS</span>
-              <span>{hero.xp.toLocaleString()} / {hero.xpNext.toLocaleString()}</span>
+              <span>{isInitialized ? `${hero.xp.toLocaleString()} / ${hero.xpNext.toLocaleString()}` : '0 / 100'}</span>
             </div>
             <div className="w-full bg-[#0B0E14] h-2 rounded-full overflow-hidden border border-gray-800">
               <div 
@@ -183,7 +201,13 @@ const Sidebar = ({ onOpenForgeModal }) => {
             <span>SETTINGS</span>
           </button>
           
-          <button className="flex items-center gap-2.5 py-2 px-2 text-accent-red hover:text-accent-red/80 transition-all rounded hover:bg-[#131822]/40 w-full text-left">
+          <button 
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="flex items-center gap-2.5 py-2 px-2 text-accent-red hover:text-accent-red/80 transition-all rounded hover:bg-[#131822]/40 w-full text-left"
+          >
             <LogOut size={14} />
             <span>LOG OUT</span>
           </button>

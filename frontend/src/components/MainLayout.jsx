@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useHabitForge } from '../context/HabitForgeContext';
 import { Bell, Flame, Sparkles, X } from 'lucide-react';
 
 const MainLayout = () => {
-  const { hero, forgeNewHabit } = useHabitForge();
+  const { hero, forgeNewHabit, isAuthenticated, isInitialized } = useHabitForge();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitCategory, setNewHabitCategory] = useState('FOCUS');
@@ -50,10 +57,10 @@ const MainLayout = () => {
 
           {/* Quick Stats / Action Badges */}
           <div className="flex items-center gap-4">
-            {/* 7 DAY STREAK BADGE */}
+            {/* CONDITIONAL STREAK BADGE */}
             <div className="flex items-center gap-1.5 px-3 py-1 bg-accent-gold/10 border border-accent-gold/30 text-accent-gold rounded-full font-mono text-[11px] font-bold shadow-gold-glow animate-pulse">
               <Flame size={14} className="fill-accent-gold" />
-              <span>{hero.streak} DAY STREAK</span>
+              <span>{isInitialized ? hero.streak : 0} DAY STREAK</span>
             </div>
 
             {/* Notification Bell */}
@@ -63,7 +70,10 @@ const MainLayout = () => {
             </button>
 
             {/* Profile Quick-Action */}
-            <div className="w-8 h-8 rounded bg-[#131822] border border-accent-blue/30 overflow-hidden cursor-pointer hover:border-accent-blue transition-all flex items-center justify-center">
+            <div 
+              onClick={() => navigate('/profile')}
+              className="w-8 h-8 rounded bg-[#131822] border border-accent-blue/30 overflow-hidden cursor-pointer hover:border-accent-blue transition-all flex items-center justify-center"
+            >
               <span className="text-base">🧙‍♂️</span>
             </div>
           </div>
