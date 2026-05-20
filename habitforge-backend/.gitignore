@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Confidential / Secret Configs ###
+.env
+application-local.properties
+GEMINI_API_KEY
+

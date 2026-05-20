@@ -1,0 +1,14 @@
+package org.example.habitforgebackend.dto.ai.gemini;
+
+import java.util.List;
+
+public record GeminiRequest(
+    List<Content> contents,
+    SystemInstruction systemInstruction,
+    GenerationConfig generationConfig
+) {
+    public record Content(String role, List<Part> parts) {}
+    public record Part(String text) {}
+    public record SystemInstruction(List<Part> parts) {}
+    public record GenerationConfig(String responseMimeType) {}
+}
