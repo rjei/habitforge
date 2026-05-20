@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0B0E14;
+    font-family: 'Inter', sans-serif;
+    color: #F8FAFC; /* slate-50 */
+  }
+
+  /* Custom high-tech scrollbar for premium RPG immersion */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0B0E14;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1F2937; /* gray-800 */
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8BABFF; /* accent-blue glow hover */
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism card styles */
+  .rpg-card {
+    background-color: #131822;
+    border: 1px solid #1F2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .rpg-card-glowing {
+    background-color: #131822;
+    border: 1px solid rgba(139, 171, 255, 0.25);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 15px rgba(139, 171, 255, 0.08);
+  }
+
+  /* Stat progress bar wrappers */
+  .stat-progress-bg {
+    background-color: #1F2937;
+    height: 0.5rem;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  /* Neon pulse classes */
+  .pulse-blue {
+    animation: bluePulse 3s infinite alternate;
+  }
+  
+  .pulse-gold {
+    animation: goldPulse 3s infinite alternate;
+  }
+}
+
+/* Custom keyframes for premium UI wow factors */
+@keyframes bluePulse {
+  0% {
+    box-shadow: 0 0 5px rgba(139, 171, 255, 0.15);
+    border-color: rgba(139, 171, 255, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(139, 171, 255, 0.4);
+    border-color: rgba(139, 171, 255, 0.6);
+  }
+}
+
+@keyframes goldPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+    border-color: rgba(251, 191, 36, 0.6);
+  }
+}
+
+/* Glowing text classes */
+.text-glow-blue {
+  text-shadow: 0 0 8px rgba(139, 171, 255, 0.5);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+/* Custom grid element animation for 30-day resonance */
+.resonance-square {
+  transition: all 0.2s ease-in-out;
+}
+.resonance-square:hover {
+  transform: scale(1.2);
+  z-index: 10;
+  box-shadow: 0 0 8px currentColor;
+}
