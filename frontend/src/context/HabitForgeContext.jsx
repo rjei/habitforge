@@ -15,7 +15,7 @@ export const HabitForgeProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // HERO INITIALIZATION STATE (Onboarding vs Dashboard)
-  const [isInitialized, setIsInitialized] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 1. HERO STATE
   const [hero, setHero] = useState({
@@ -37,6 +37,7 @@ export const HabitForgeProvider = ({ children }) => {
   // Auth functions
   const login = (usernameOrEmail, phrase) => {
     setIsAuthenticated(true);
+    setIsInitialized(true); // Logging in loads their existing hero!
   };
 
   const register = (heroName, email, phrase) => {
