@@ -35,11 +35,13 @@ public class XpService {
 
     private void applyCategoryScore(GameCharacter character, Habit habit, int xpEarned) {
         String category = habit.getCategory() == null ? "" : habit.getCategory().toLowerCase();
-        if (category.contains("produktiv") || category.contains("belajar")) {
-            character.setDisciplineScore(character.getDisciplineScore() + xpEarned);
+        int statIncrease = (int) Math.max(1, Math.ceil(xpEarned / 30.0));
+
+        if (category.contains("focus") || category.contains("wisdom") || category.contains("produktiv") || category.contains("belajar")) {
+            character.setDisciplineScore(character.getDisciplineScore() + statIncrease);
         }
-        if (category.contains("kesehatan") || category.contains("olahraga") || category.contains("health")) {
-            character.setHealthScore(character.getHealthScore() + xpEarned);
+        if (category.contains("vitality") || category.contains("kesehatan") || category.contains("olahraga") || category.contains("health")) {
+            character.setHealthScore(character.getHealthScore() + statIncrease);
         }
     }
 }

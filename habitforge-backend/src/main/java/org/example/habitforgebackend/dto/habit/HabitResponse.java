@@ -12,7 +12,8 @@ public record HabitResponse(
         int currentStreak,
         LocalDateTime createdAt,
         Integer targetDaysPerWeek,
-        LocalDate deadline
+        LocalDate deadline,
+        boolean completedToday
 ) {
 }
 

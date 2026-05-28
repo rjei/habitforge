@@ -162,6 +162,14 @@ public class HabitService {
     private HabitResponse toResponse(Habit habit) {
         Integer targetDays = habit instanceof WeeklyHabit weeklyHabit ? weeklyHabit.getTargetDaysPerWeek() : null;
         java.time.LocalDate deadline = habit instanceof ChallengeHabit challengeHabit ? challengeHabit.getDeadline() : null;
+        
+        LocalDate today = LocalDate.now();
+        boolean completedToday = habitLogRepository.existsByHabitIdAndCompletedAtBetween(
+                habit.getId(),
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay().minusNanos(1)
+        );
+
         return new HabitResponse(
                 habit.getId(),
                 habit.getName(),
@@ -171,7 +179,8 @@ public class HabitService {
                 habit.getCurrentStreak(),
                 habit.getCreatedAt(),
                 targetDays,
-                deadline
+                deadline,
+                completedToday
         );
     }
 }

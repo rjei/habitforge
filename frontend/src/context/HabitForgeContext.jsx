@@ -24,11 +24,11 @@ export const HabitForgeProvider = ({ children }) => {
     level: 1,
     xp: 0,
     xpNext: 100,
-    streak: 7,
+    streak: 0,
     stats: {
-      focus: 10,
-      vitality: 10,
-      wisdom: 10
+      focus: 0,
+      vitality: 0,
+      wisdom: 0
     },
     avatar: localStorage.getItem('avatar') || 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80',
     title: 'Level 1 Paladin'
@@ -44,22 +44,69 @@ export const HabitForgeProvider = ({ children }) => {
       });
       if (response.ok) {
         const data = await response.json();
+        
+        // Calculate relative level progress to avoid UI overflow
+        const xpNeededForThisLevel = data.level * 100;
+        const currentLevelProgress = Math.max(0, xpNeededForThisLevel - data.xpToNextLevel);
+
         setHero(prev => ({
           ...prev,
           name: localStorage.getItem('username') || prev.name,
           level: data.level,
-          xp: data.totalXp,
-          xpNext: data.xpToNextLevel,
+          xp: currentLevelProgress,
+          xpNext: xpNeededForThisLevel,
           stats: {
-            focus: data.disciplineScore || 10,
-            vitality: data.healthScore || 10,
-            wisdom: prev.stats.wisdom || 10
+            focus: data.disciplineScore || 0,
+            vitality: data.healthScore || 0,
+            wisdom: prev.stats.wisdom || 0
           },
           title: `Level ${data.level} ${prev.class}`
         }));
+      } else {
+        logout();
       }
     } catch (err) {
       console.error('Error fetching character:', err);
+    }
+  };
+
+  const fetchHabits = async (token) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/habits', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const mappedHabits = data.map(h => ({
+          id: h.id,
+          name: h.name,
+          grimoireName: h.name,
+          description: `${h.type} Quest • Custom`,
+          category: h.category,
+          rewardXp: h.xpReward,
+          rewardStat: h.category === 'VITALITY' ? 'VITALITY' : h.category === 'WISDOM' ? 'WISDOM' : 'FOCUS',
+          rewardStatVal: Math.ceil(h.xpReward / 30),
+          completedToday: h.completedToday,
+          successRate: 100,
+          tier: 'Epic',
+          streak: h.currentStreak,
+          streakMultiplier: 10,
+          classBonus: 10,
+          resonance: Array(30).fill(h.completedToday),
+          history: []
+        }));
+        setHabits(mappedHabits);
+        if (mappedHabits.length > 0) {
+          setSelectedHabitId(prev => mappedHabits.some(h => h.id === prev) ? prev : mappedHabits[0].id);
+        }
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error('Error fetching habits:', err);
     }
   };
 
@@ -70,6 +117,7 @@ export const HabitForgeProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsInitialized(true);
       fetchCharacterData(token);
+      fetchHabits(token);
       const storedAvatar = localStorage.getItem('avatar');
       if (storedAvatar) {
         setHero(prev => ({ ...prev, avatar: storedAvatar }));
@@ -100,6 +148,7 @@ export const HabitForgeProvider = ({ children }) => {
     setIsAuthenticated(true);
     setIsInitialized(true);
     await fetchCharacterData(data.token);
+    await fetchHabits(data.token);
   };
 
   const register = async (heroName, email, phrase) => {
@@ -120,18 +169,26 @@ export const HabitForgeProvider = ({ children }) => {
     setIsAuthenticated(true);
     setIsInitialized(true);
     await fetchCharacterData(data.token);
+    await fetchHabits(data.token);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('avatar');
-    setIsAuthenticated(false);
+    setIsAuthenticated(true); // Enable guest mode at root path
     setIsInitialized(false);
-    setHero(prev => ({
-      ...prev,
-      avatar: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80'
-    }));
+    setHero({
+      name: 'Seraphim Dawn',
+      class: 'Paladin',
+      level: 1,
+      xp: 0,
+      xpNext: 100,
+      streak: 0,
+      stats: { focus: 0, vitality: 0, wisdom: 0 },
+      avatar: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=200&h=200&q=80',
+      title: 'Level 1 Paladin'
+    });
   };
 
   const updateAvatar = (avatarUrl) => {
@@ -276,78 +333,55 @@ export const HabitForgeProvider = ({ children }) => {
   const selectedHabit = habits.find(h => h.id === selectedHabitId) || habits[0];
 
   // Complete a Daily Quest
-  const completeQuest = (id) => {
-    setHabits(prevHabits =>
-      prevHabits.map(habit => {
-        if (habit.id === id && !habit.completedToday) {
-          // Trigger rewards
-          addXp(habit.rewardXp, habit.rewardStat, habit.rewardStatVal);
+  const completeQuest = async (id) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-          // Update 30-day resonance: replace the last element (today) with true
-          const updatedResonance = [...habit.resonance];
-          updatedResonance[updatedResonance.length - 1] = true;
-
-          const newHistory = [
-            { date: 'Just Now', status: 'Completed', xpGained: habit.rewardXp },
-            ...habit.history
-          ];
-
-          const newStreak = habit.streak + 1;
-          const successCount = updatedResonance.filter(Boolean).length;
-          const newSuccessRate = Math.round((successCount / updatedResonance.length) * 100);
-
-          return {
-            ...habit,
-            completedToday: true,
-            streak: newStreak,
-            successRate: newSuccessRate,
-            resonance: updatedResonance,
-            history: newHistory
-          };
+    try {
+      const response = await fetch(`http://localhost:8080/api/habits/${id}/complete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        return habit;
-      })
-    );
-
-    // Reactive increase streak badge if all done
-    setHero(prev => {
-      const allDone = habits.every(h => h.id === id ? true : h.completedToday);
-      if (allDone) {
-        return { ...prev, streak: prev.streak + 1 };
+      });
+      if (response.ok) {
+        await fetchCharacterData(token);
+        await fetchHabits(token);
       }
-      return prev;
-    });
+    } catch (err) {
+      console.error('Error completing quest:', err);
+    }
   };
 
   // Forge a New Habit
-  const forgeNewHabit = (name, category, rewardXp, grimoireName, tier = 'Rare') => {
-    const statMap = {
-      FOCUS: 'FOCUS',
-      VITALITY: 'VITALITY',
-      WISDOM: 'WISDOM'
-    };
+  const forgeNewHabit = async (name, category, rewardXp, grimoireName, tier = 'Rare') => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-    const newHabit = {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name: name,
-      grimoireName: grimoireName || name,
-      description: `Daily Quest • Custom`,
-      category: category,
-      rewardXp: parseInt(rewardXp) || 200,
-      rewardStat: statMap[category] || 'FOCUS',
-      rewardStatVal: Math.ceil((parseInt(rewardXp) || 200) / 30),
-      completedToday: false,
-      successRate: 100,
-      tier: tier,
-      streak: 0,
-      streakMultiplier: 0,
-      classBonus: 5,
-      resonance: Array(30).fill(false),
-      history: []
-    };
-
-    setHabits(prev => [...prev, newHabit]);
-    setSelectedHabitId(newHabit.id);
+    try {
+      const response = await fetch('http://localhost:8080/api/habits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: name,
+          category: category,
+          type: 'DAILY',
+          xpReward: parseInt(rewardXp) || 200,
+          targetDaysPerWeek: null,
+          deadline: null
+        })
+      });
+      if (response.ok) {
+        const newHabitData = await response.json();
+        await fetchHabits(token);
+        setSelectedHabitId(newHabitData.id);
+      }
+    } catch (err) {
+      console.error('Error forging new habit:', err);
+    }
   };
 
   // 3. LEADERBOARD STATE
