@@ -34,6 +34,9 @@ export const HabitForgeProvider = ({ children }) => {
     title: 'Level 1 Paladin'
   });
 
+  const [globalLeaderboard, setGlobalLeaderboard] = useState([]);
+  const [friendsLeaderboard, setFriendsLeaderboard] = useState([]);
+
   const fetchCharacterData = async (token) => {
     try {
       const response = await fetch('http://localhost:8080/api/character', {
@@ -80,24 +83,90 @@ export const HabitForgeProvider = ({ children }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        const mappedHabits = data.map(h => ({
-          id: h.id,
-          name: h.name,
-          grimoireName: h.name,
-          description: `${h.type} Quest • Custom`,
-          category: h.category,
-          rewardXp: h.xpReward,
-          rewardStat: h.category === 'VITALITY' ? 'VITALITY' : h.category === 'WISDOM' ? 'WISDOM' : 'FOCUS',
-          rewardStatVal: Math.ceil(h.xpReward / 30),
-          completedToday: h.completedToday,
-          successRate: 100,
-          tier: 'Epic',
-          streak: h.currentStreak,
-          streakMultiplier: 10,
-          classBonus: 10,
-          resonance: Array(30).fill(h.completedToday),
-          history: []
+        
+        // Fetch logs for all habits in parallel to build real resonance grids and history tables
+        const mappedHabits = await Promise.all(data.map(async (h) => {
+          let logs = [];
+          try {
+            const logsRes = await fetch(`http://localhost:8080/api/habits/${h.id}/logs`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (logsRes.ok) {
+              logs = await logsRes.json();
+            }
+          } catch (err) {
+            console.error('Error fetching logs for habit ' + h.id, err);
+          }
+
+          // Build 30-day resonance array:
+          const resonance = Array(30).fill(false);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          logs.forEach(log => {
+            const logDate = new Date(log.completedAt);
+            logDate.setHours(0, 0, 0, 0);
+            const diffTime = Math.abs(today - logDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays < 30) {
+              resonance[29 - diffDays] = true;
+            }
+          });
+
+          // Force today to be true if completedToday is true
+          if (h.completedToday) {
+            resonance[29] = true;
+          }
+
+          const formatLogDate = (dateString) => {
+            const date = new Date(dateString);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (date.toDateString() === today.toDateString()) {
+              return `Today, ${timeString}`;
+            } else if (date.toDateString() === yesterday.toDateString()) {
+              return `Yesterday, ${timeString}`;
+            } else {
+              return `${date.toLocaleDateString()} ${timeString}`;
+            }
+          };
+
+          const history = logs.map(log => ({
+            date: formatLogDate(log.completedAt),
+            status: 'Completed',
+            xpGained: log.xpEarned
+          }));
+
+          // Calculate a dynamic success rate based on logs in the last 30 days
+          const activeDaysCount = resonance.filter(Boolean).length;
+          const successRate = logs.length > 0 ? Math.round((activeDaysCount / 30) * 100) : 100;
+
+          return {
+            id: h.id,
+            name: h.name,
+            grimoireName: h.name,
+            description: `${h.type} Quest • Custom`,
+            category: h.category,
+            rewardXp: h.xpReward,
+            rewardStat: h.category === 'VITALITY' ? 'VITALITY' : h.category === 'WISDOM' ? 'WISDOM' : 'FOCUS',
+            rewardStatVal: Math.ceil(h.xpReward / 30),
+            completedToday: h.completedToday,
+            successRate,
+            tier: h.xpReward >= 600 ? 'Legendary' : h.xpReward >= 400 ? 'Epic' : 'Rare',
+            streak: h.currentStreak,
+            streakMultiplier: Math.min(20, h.currentStreak * 2),
+            classBonus: 10,
+            resonance,
+            history
+          };
         }));
+
         setHabits(mappedHabits);
         if (mappedHabits.length > 0) {
           setSelectedHabitId(prev => mappedHabits.some(h => h.id === prev) ? prev : mappedHabits[0].id);
@@ -110,6 +179,32 @@ export const HabitForgeProvider = ({ children }) => {
     }
   };
 
+  const fetchLeaderboard = async (token) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/character/leaderboard', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const mappedData = data.map(entry => ({
+          rank: entry.rank,
+          name: entry.name,
+          level: entry.level,
+          xp: entry.totalXp,
+          avatar: entry.avatar,
+          isCurrentUser: entry.isCurrentUser
+        }));
+        setGlobalLeaderboard(mappedData);
+        setFriendsLeaderboard(mappedData.slice(0, 5));
+      }
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
@@ -118,6 +213,7 @@ export const HabitForgeProvider = ({ children }) => {
       setIsInitialized(true);
       fetchCharacterData(token);
       fetchHabits(token);
+      fetchLeaderboard(token);
       const storedAvatar = localStorage.getItem('avatar');
       if (storedAvatar) {
         setHero(prev => ({ ...prev, avatar: storedAvatar }));
@@ -149,6 +245,7 @@ export const HabitForgeProvider = ({ children }) => {
     setIsInitialized(true);
     await fetchCharacterData(data.token);
     await fetchHabits(data.token);
+    await fetchLeaderboard(data.token);
   };
 
   const register = async (heroName, email, phrase) => {
@@ -170,6 +267,7 @@ export const HabitForgeProvider = ({ children }) => {
     setIsInitialized(true);
     await fetchCharacterData(data.token);
     await fetchHabits(data.token);
+    await fetchLeaderboard(data.token);
   };
 
   const logout = () => {
@@ -347,6 +445,7 @@ export const HabitForgeProvider = ({ children }) => {
       if (response.ok) {
         await fetchCharacterData(token);
         await fetchHabits(token);
+        await fetchLeaderboard(token);
       }
     } catch (err) {
       console.error('Error completing quest:', err);
@@ -384,23 +483,7 @@ export const HabitForgeProvider = ({ children }) => {
     }
   };
 
-  // 3. LEADERBOARD STATE
-  const globalLeaderboard = [
-    { rank: 1, name: 'Archmage_Neo', level: 50, xp: 48000, avatar: '🧙‍♂️', isCurrentUser: false },
-    { rank: 2, name: 'NIGHTSHADE', level: 42, xp: 38200, avatar: '🥷', isCurrentUser: false },
-    { rank: 3, name: 'IRONFIST', level: 39, xp: 35400, avatar: '🧔', isCurrentUser: false },
-    { rank: 4, name: 'VoidWalker', level: 38, xp: 32850, avatar: '👤', isCurrentUser: false },
-    { rank: 5, name: 'Elder_Groot', level: 35, xp: 31200, avatar: '🧝', isCurrentUser: false },
-    { rank: 6, name: 'Volt_Runner', level: 31, xp: 29940, avatar: '🤖', isCurrentUser: false },
-    { rank: 12, name: 'You (PaladinX)', level: 24, xp: 14200, avatar: '🛡️', isCurrentUser: true }
-  ];
 
-  const friendsLeaderboard = [
-    { rank: 1, name: 'IRONFIST', level: 39, xp: 35400, avatar: '🧔', isCurrentUser: false },
-    { rank: 2, name: 'VoidWalker', level: 38, xp: 32850, avatar: '👤', isCurrentUser: false },
-    { rank: 3, name: 'You (PaladinX)', level: 24, xp: 14200, avatar: '🛡️', isCurrentUser: true },
-    { rank: 4, name: 'Volt_Runner', level: 31, xp: 29940, avatar: '🤖', isCurrentUser: false }
-  ];
 
   // 4. SAGE COACH CHAT STATE
   const [chatThreads, setChatThreads] = useState([

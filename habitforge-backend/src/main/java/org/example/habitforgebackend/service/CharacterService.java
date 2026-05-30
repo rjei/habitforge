@@ -1,12 +1,16 @@
 package org.example.habitforgebackend.service;
 
 import org.example.habitforgebackend.dto.character.CharacterResponse;
+import org.example.habitforgebackend.dto.character.LeaderboardEntryResponse;
 import org.example.habitforgebackend.model.GameCharacter;
 import org.example.habitforgebackend.model.User;
 import org.example.habitforgebackend.repository.GameCharacterRepository;
 import org.example.habitforgebackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class CharacterService {
@@ -70,5 +74,36 @@ public class CharacterService {
                 character.getActiveXpMultiplier(),
                 character.getXpBoostExpiresAt()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeaderboardEntryResponse> getLeaderboard(String currentUsername) {
+        List<GameCharacter> characters = characterRepository.findAllByOrderByTotalXpDesc();
+        List<LeaderboardEntryResponse> leaderboard = new ArrayList<>();
+
+        for (int i = 0; i < characters.size(); i++) {
+            GameCharacter c = characters.get(i);
+            boolean isCurrentUser = c.getUser().getUsername().equals(currentUsername);
+            
+            // Cool RPG emoji based on focus vs vitality stats
+            String avatar = "🛡️";
+            if (c.getDisciplineScore() > c.getHealthScore() + 15) {
+                avatar = "🧙‍♂️";
+            } else if (c.getHealthScore() > c.getDisciplineScore() + 15) {
+                avatar = "🥷";
+            } else if (c.getLevel() > 5) {
+                avatar = "🧔";
+            }
+
+            leaderboard.add(new LeaderboardEntryResponse(
+                    i + 1,
+                    c.getUser().getUsername(),
+                    c.getLevel(),
+                    c.getTotalXp(),
+                    avatar,
+                    isCurrentUser
+            ));
+        }
+        return leaderboard;
     }
 }

@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface GameCharacterRepository extends org.springframework.data.jpa.repository.JpaRepository<GameCharacter, Long> {
     Optional<GameCharacter> findByUser(User user);
     Optional<GameCharacter> findByUserId(Long userId);
+    java.util.List<GameCharacter> findAllByOrderByTotalXpDesc();
 }

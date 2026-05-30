@@ -1,6 +1,7 @@
 package org.example.habitforgebackend.controller;
 
 import org.example.habitforgebackend.dto.character.CharacterResponse;
+import org.example.habitforgebackend.dto.character.LeaderboardEntryResponse;
 import org.example.habitforgebackend.service.CharacterService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/character")
@@ -21,5 +24,10 @@ public class CharacterController {
     @GetMapping
     public ResponseEntity<CharacterResponse> getMyCharacter(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(characterService.getMyCharacter(userDetails.getUsername()));
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<LeaderboardEntryResponse>> getLeaderboard(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(characterService.getLeaderboard(userDetails.getUsername()));
     }
 }

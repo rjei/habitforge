@@ -14,8 +14,16 @@ const LeaderboardView = () => {
   const rank2 = currentLeaderboard.find(p => p.rank === 2);
   const rank3 = currentLeaderboard.find(p => p.rank === 3);
 
-  // Remaining entries below top 3
-  const tableEntries = currentLeaderboard.filter(p => p.rank > 3 || p.isCurrentUser);
+  // Get top 10 entries for the table
+  const top10 = currentLeaderboard.slice(0, 10);
+  const isCurrentUserInTop10 = top10.some(p => p.isCurrentUser);
+  const currentUserEntry = currentLeaderboard.find(p => p.isCurrentUser);
+
+  let tableEntries = [...top10];
+  if (!isCurrentUserInTop10 && currentUserEntry) {
+    tableEntries.push({ isSeparator: true });
+    tableEntries.push(currentUserEntry);
+  }
 
   return (
     <div className="flex flex-col gap-6 font-sans max-w-4xl mx-auto select-none">
@@ -53,7 +61,7 @@ const LeaderboardView = () => {
       {/* TOP 3 PODIUM LAYOUT */}
       <div className="grid grid-cols-3 gap-2 items-end justify-center py-6 max-w-2xl mx-auto w-full">
         {/* SECOND PLACE (LEFT) */}
-        {rank2 && (
+        {rank2 ? (
           <div className="flex flex-col items-center gap-2">
             <div className="relative group">
               {/* Avatar frame */}
@@ -72,10 +80,12 @@ const LeaderboardView = () => {
               <span className="text-[10px] text-accent-blue font-mono font-bold uppercase mt-0.5">LVL {rank2.level}</span>
             </div>
           </div>
+        ) : (
+          <div />
         )}
 
         {/* FIRST PLACE (CENTER - TALLER) */}
-        {rank1 && (
+        {rank1 ? (
           <div className="flex flex-col items-center gap-3">
             <div className="relative group">
               {/* Golden frame glow */}
@@ -98,10 +108,12 @@ const LeaderboardView = () => {
               <span className="text-[10px] text-slate-400 font-mono font-bold uppercase mt-0.5">LVL {rank1.level}</span>
             </div>
           </div>
+        ) : (
+          <div />
         )}
 
         {/* THIRD PLACE (RIGHT) */}
-        {rank3 && (
+        {rank3 ? (
           <div className="flex flex-col items-center gap-2">
             <div className="relative group">
               {/* Avatar frame */}
@@ -120,6 +132,8 @@ const LeaderboardView = () => {
               <span className="text-[10px] text-accent-blue font-mono font-bold uppercase mt-0.5">LVL {rank3.level}</span>
             </div>
           </div>
+        ) : (
+          <div />
         )}
       </div>
 
@@ -135,7 +149,19 @@ const LeaderboardView = () => {
 
         {/* Table Entries */}
         <div className="flex flex-col max-h-[380px] overflow-y-auto">
-          {tableEntries.map((player) => {
+          {tableEntries.map((player, index) => {
+            if (player.isSeparator) {
+              return (
+                <div
+                  key={`separator-${index}`}
+                  className="grid grid-cols-12 items-center px-6 py-2 border-b border-gray-900 bg-[#0B0E14]/20"
+                >
+                  <div className="col-span-12 text-center text-xs font-mono font-bold text-slate-600 tracking-widest py-1">
+                    •••
+                  </div>
+                </div>
+              );
+            }
             const isMe = player.isCurrentUser;
             return (
               <div

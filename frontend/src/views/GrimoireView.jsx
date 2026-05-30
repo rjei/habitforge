@@ -81,7 +81,7 @@ const GrimoireView = () => {
         {/* 2x2 Grid of active habits */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {habits.map((habit) => {
-            const isSelected = habit.id === selectedHabit.id;
+            const isSelected = selectedHabit && habit.id === selectedHabit.id;
             return (
               <div
                 key={habit.id}
@@ -154,14 +154,27 @@ const GrimoireView = () => {
       <div className="w-full lg:w-80 shrink-0 flex flex-col gap-5">
         
         {/* DETAILS CONTAINER */}
-        <div className="rpg-card border border-gray-800 p-5 flex flex-col gap-6">
-          {/* Header info */}
-          <div className="border-b border-gray-850 pb-3 flex flex-col">
-            <span className="text-[9px] text-slate-500 font-mono tracking-widest uppercase">SELECTED ARTIFACT</span>
-            <h3 className="text-base font-extrabold text-white mt-1">
-              {selectedHabit.grimoireName}
-            </h3>
+        {!selectedHabit ? (
+          <div className="rpg-card border border-gray-800 p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
+            <div className="w-12 h-12 rounded-full bg-[#0B0E14] border border-gray-800 flex items-center justify-center text-slate-500">
+              <Sparkles size={20} className="text-slate-500 animate-pulse" />
+            </div>
+            <div className="flex flex-col gap-1 items-center">
+              <h3 className="text-sm font-extrabold text-slate-400 uppercase tracking-widest">No Active Quests</h3>
+              <p className="text-[10px] text-slate-500 font-mono mt-1.5 uppercase max-w-[200px] leading-relaxed">
+                Your Grimoire is empty. Forge a new quest to begin your chronicle.
+              </p>
+            </div>
           </div>
+        ) : (
+          <div className="rpg-card border border-gray-800 p-5 flex flex-col gap-6">
+            {/* Header info */}
+            <div className="border-b border-gray-850 pb-3 flex flex-col">
+              <span className="text-[9px] text-slate-500 font-mono tracking-widest uppercase">SELECTED ARTIFACT</span>
+              <h3 className="text-base font-extrabold text-white mt-1">
+                {selectedHabit.grimoireName}
+              </h3>
+            </div>
 
           {/* Success rate & Tier card grid */}
           <div className="grid grid-cols-2 gap-3">
@@ -249,6 +262,7 @@ const GrimoireView = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
